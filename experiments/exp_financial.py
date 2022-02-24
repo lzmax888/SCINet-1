@@ -39,7 +39,7 @@ class Exp_financial(Exp_Basic):
             self.input_dim = 137
             
         if self.args.dataset_name == 'exchange_rate':
-            self.input_dim = 8
+            self.input_dim = 2
             
         if self.args.dataset_name == 'traffic':
             self.input_dim = 862
@@ -83,7 +83,7 @@ class Exp_financial(Exp_Basic):
             return DataLoaderH(self.args.data, 0.6, 0.2, self.args.horizon, self.args.window_size, self.args.normalize)
 
     def _select_optimizer(self):
-        return torch.optim.Adam(params=self.model.parameters(), lr=self.args.lr, betas=(0.9, 0.999), weight_decay=1e-5)
+        return torch.optim.AdamW(params=self.model.parameters(), lr=self.args.lr, betas=(0.9, 0.999), weight_decay=1e-5)
 
 
     def train(self):
@@ -210,7 +210,7 @@ class Exp_financial(Exp_Basic):
                 self.writer.add_scalar('Test_mid_corr', test_correlation_mid, global_step=epoch)
 
             print(
-                '| EncoDeco: end of epoch {:3d} | time: {:5.2f}s | train_loss {:5.4f} | valid rse {:5.4f} | valid rae {:5.4f} | valid corr  {:5.4f}| valid mse {:5.4f} | valid mae  {:5.4f}|'
+                '| EncoDeco: end of epoch {:3d} | time: {:5.2f}s | train_loss {:5.4f} | valid rse {:5.4f} | valid rae {:5.4f} | valid corr  {:5.4f}| valid mse {:5.4f} | valid mae  {:5.4f}|\n'
                 ' test rse {:5.4f} | test rae {:5.4f} | test corr  {:5.4f} | test mse {:5.4f} | test mae  {:5.4f}|'.format(
                     epoch, (time.time() - epoch_start_time), total_loss / n_samples, val_loss, val_rae, val_corr, val_mse, val_mae, test_loss, test_rae, test_corr, test_mse, test_mae), flush=True)
             
@@ -223,6 +223,7 @@ class Exp_financial(Exp_Basic):
                 print('--------------| Best Val loss |--------------')
                 best_val = val_loss
 
+            print('\n')
         return total_loss / n_samples
 
     def validate(self, data, X, Y, evaluate=False):
@@ -351,13 +352,13 @@ class Exp_financial(Exp_Basic):
             correlation_mid = ((mid_pred - mean_mid) * (Ytest - mean_g)).mean(axis=0) / (sigma_mid * sigma_g)
             correlation_mid = (correlation_mid[index_mid]).mean()
 
-        print(
-            '|valid_final mse {:5.4f} |valid_final mae {:5.4f} |valid_final rse {:5.4f} | valid_final rae {:5.4f} | valid_final corr  {:5.4f}'.format(mse,mae,
-                rse, rae, correlation), flush=True)
-        if self.args.stacks == 2:
-            print(
-            '|valid_final mse {:5.4f} |valid_final mae {:5.4f} |valid_mid rse {:5.4f} | valid_mid rae {:5.4f} | valid_mid corr  {:5.4f}'.format(mse,mae,
-                rse_mid, rae_mid, correlation_mid), flush=True)
+        #print(
+        #    '|valid_final mse {:5.4f} |valid_final mae {:5.4f} |valid_final rse {:5.4f} | valid_final rae {:5.4f} | valid_final #corr  {:5.4f}'.format(mse,mae,
+        #        rse, rae, correlation), flush=True)
+        # if self.args.stacks == 2:
+        #     print(
+        #     '|valid_final mse {:5.4f} |valid_final mae {:5.4f} |valid_mid rse {:5.4f} | valid_mid rae {:5.4f} | valid_mid corr  {:5.4f}'.format(mse,mae,
+        #         rse_mid, rae_mid, correlation_mid), flush=True)
 
         if self.args.stacks == 1:
             return rse, rae, correlation, mse, mae
