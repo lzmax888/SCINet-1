@@ -9,6 +9,7 @@ dataset/
 *.pth
 *.npe
 *.csv
+*.npy
 run/
 run_ETTh/
 run_financial/

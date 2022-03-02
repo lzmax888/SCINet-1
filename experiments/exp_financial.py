@@ -61,7 +61,7 @@ class Exp_financial(Exp_Basic):
             modified=True,
             RIN=self.args.RIN
         )
-        print(model)
+        #print(model)
         return model
     
     def _get_data(self):
@@ -88,7 +88,7 @@ class Exp_financial(Exp_Basic):
 
     def train(self):
 
-        best_val=10000000
+        self.best_val=10000000
         
         optim=self._select_optimizer()
 
@@ -214,14 +214,14 @@ class Exp_financial(Exp_Basic):
                 ' test rse {:5.4f} | test rae {:5.4f} | test corr  {:5.4f} | test mse {:5.4f} | test mae  {:5.4f}|'.format(
                     epoch, (time.time() - epoch_start_time), total_loss / n_samples, val_loss, val_rae, val_corr, val_mse, val_mae, test_loss, test_rae, test_corr, test_mse, test_mae), flush=True)
             
-            if val_mse < best_val and self.args.long_term_forecast:
+            if val_mse < self.best_val and self.args.long_term_forecast:
                 save_model(epoch, lr, self.model, save_path, model_name=self.args.dataset_name, horizon=self.args.horizon)
                 print('--------------| Best Val loss |--------------')
-                best_val = val_mse
-            elif val_loss < best_val and not self.args.long_term_forecast:
+                self.best_val = val_mse
+            elif val_loss < self.best_val and not self.args.long_term_forecast:
                 save_model(epoch, lr, self.model, save_path, model_name=self.args.dataset_name, horizon=self.args.horizon)
                 print('--------------| Best Val loss |--------------')
-                best_val = val_loss
+                self.best_val = val_loss
 
             print('\n')
         return total_loss / n_samples
@@ -294,6 +294,11 @@ class Exp_financial(Exp_Basic):
         target_Norm = torch.cat(target_set, axis=0)
         mse = MSE(forecast_Norm.cpu().numpy(), target_Norm.cpu().numpy())
         mae = MAE(forecast_Norm.cpu().numpy(), target_Norm.cpu().numpy())
+
+        if mse<self.best_val:
+            np.save('exp/results/forecast_Norm',forecast_Norm.cpu().numpy())
+            np.save('exp/results/target_Norm',target_Norm.cpu().numpy())
+        
 
         if self.args.stacks == 2:
             Mid_Norm = torch.cat(Mid_set, axis=0)
